@@ -1,5 +1,4 @@
-import 'package:cinemapedia/domain/repositories/movies_repository.dart';
-import 'package:cinemapedia/presentation/providers/movies/movies_repository_provider.dart';
+import 'package:cinemapedia/presentation/providers/providers.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -9,20 +8,41 @@ class HomeScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final MoviesRepository moviesRepository = ref.watch(
-      movieRepositoryProvider,
-    );
     return Scaffold(
       appBar: AppBar(title: const Text('Cinemapedia'), centerTitle: true),
-      body: Center(child: Text('env: ')),
+      body: _HomeView(),
       floatingActionButton: FloatingActionButton(
-        onPressed: () {
-          moviesRepository.getNowPlayingMovies(page: 1).then((value) {
-            print(value);
-          });
-        },
+        onPressed: () {},
         child: const Icon(Icons.add),
       ),
+    );
+  }
+}
+
+class _HomeView extends ConsumerStatefulWidget {
+  @override
+  _HomeViewState createState() => _HomeViewState();
+}
+
+class _HomeViewState extends ConsumerState<_HomeView> {
+  @override
+  void initState() {
+    super.initState();
+    ref.read(nowPlayingMoviesProvider.notifier).loadNextPage();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final movies = ref.watch(nowPlayingMoviesProvider);
+    return ListView.builder(
+      itemBuilder: (context, index) {
+        final movie = movies[index];
+        return ListTile(
+          title: Text(movie.title),
+          subtitle: Text(movie.overview),
+        );
+      },
+      itemCount: movies.length,
     );
   }
 }

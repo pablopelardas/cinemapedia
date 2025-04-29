@@ -13,8 +13,8 @@ class MoviedbDatasource implements MoviesDatasource {
       headers: {
         'Content-Type': 'application/json;charset=utf-8',
         'Authorization': 'Bearer ${Environment.movieDbKey}',
-        'language': 'es-MX',
       },
+      queryParameters: {'language': 'es-MX'},
     ),
   );
 
