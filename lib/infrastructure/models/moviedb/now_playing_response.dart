@@ -17,7 +17,7 @@ class NowPlayingResponse {
 
   factory NowPlayingResponse.fromJson(Map<String, dynamic> json) =>
       NowPlayingResponse(
-        dates: json["dates"] ? Dates.fromJson(json["dates"]) : null,
+        dates: json["dates"] != null ? Dates.fromJson(json["dates"]) : null,
         page: json["page"],
         results: List<MovieMovieDb>.from(
           json["results"].map((x) => MovieMovieDb.fromJson(x)),
