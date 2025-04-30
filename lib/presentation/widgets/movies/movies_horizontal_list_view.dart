@@ -1,8 +1,9 @@
 import 'package:animate_do/animate_do.dart';
+import 'package:cinemapedia/config/helpers/human_formats.dart';
 import 'package:cinemapedia/domain/entities/movie.dart';
 import 'package:flutter/material.dart';
 
-class MoviesHorizontalListView extends StatelessWidget {
+class MoviesHorizontalListView extends StatefulWidget {
   final List<Movie> movies;
   final String? title;
   final String? subtitle;
@@ -17,20 +18,49 @@ class MoviesHorizontalListView extends StatelessWidget {
   });
 
   @override
+  State<MoviesHorizontalListView> createState() =>
+      _MoviesHorizontalListViewState();
+}
+
+class _MoviesHorizontalListViewState extends State<MoviesHorizontalListView> {
+  final scrollController = ScrollController();
+
+  @override
+  void initState() {
+    // TODO: implement initState
+    super.initState();
+
+    scrollController.addListener(() {
+      if (widget.loadNextPage == null) return;
+      if (scrollController.position.pixels >=
+          scrollController.position.maxScrollExtent - 200) {
+        widget.loadNextPage!();
+      }
+    });
+  }
+
+  @override
+  void dispose() {
+    super.dispose();
+    scrollController.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
     return SizedBox(
       height: 350,
       child: Column(
         children: [
-          if (title != null || subtitle != null)
-            _Title(title: title, subtitle: subtitle),
+          if (widget.title != null || widget.subtitle != null)
+            _Title(title: widget.title, subtitle: widget.subtitle),
           Expanded(
             child: ListView.builder(
-              itemCount: movies.length,
+              controller: scrollController,
+              itemCount: widget.movies.length,
               scrollDirection: Axis.horizontal,
               physics: const BouncingScrollPhysics(),
               itemBuilder: (context, index) {
-                return _MoviePoster(movie: movies[index]);
+                return _MoviePoster(movie: widget.movies[index]);
               },
             ),
           ),
@@ -116,26 +146,29 @@ class _MoviePoster extends StatelessWidget {
               style: textTheme.titleSmall,
             ),
           ),
-          Row(
-            children: [
-              Icon(
-                Icons.star_half_outlined,
-                size: 15,
-                color: Colors.yellow.shade800,
-              ),
-              const SizedBox(width: 5),
-              Text(
-                movie.voteAverage.toString(),
-                style: textTheme.bodySmall?.copyWith(
+          SizedBox(
+            width: 150,
+            child: Row(
+              children: [
+                Icon(
+                  Icons.star_half_outlined,
+                  size: 15,
                   color: Colors.yellow.shade800,
                 ),
-              ),
-              const SizedBox(width: 10),
-              Text(
-                movie.popularity.toString(),
-                style: textTheme.bodySmall?.copyWith(color: Colors.grey),
-              ),
-            ],
+                const SizedBox(width: 5),
+                Text(
+                  movie.voteAverage.toString(),
+                  style: textTheme.bodySmall?.copyWith(
+                    color: Colors.yellow.shade800,
+                  ),
+                ),
+                Spacer(),
+                Text(
+                  HumanFormats.number(movie.popularity),
+                  style: textTheme.bodySmall?.copyWith(color: Colors.grey),
+                ),
+              ],
+            ),
           ),
         ],
       ),
