@@ -1,3 +1,4 @@
+import 'package:cinemapedia/infrastructure/models/moviedb/movie_details_moviedb.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:cinemapedia/config/constants/environment.dart';
@@ -14,7 +15,6 @@ class MoviedbDatasource implements MoviesDatasource {
         'Content-Type': 'application/json;charset=utf-8',
         'Authorization': 'Bearer ${Environment.movieDbKey}',
       },
-      queryParameters: {'language': 'es-MX'},
     ),
   );
 
@@ -83,6 +83,23 @@ class MoviedbDatasource implements MoviesDatasource {
       // Handle error
       debugPrint('Error fetching upcoming movies: $e');
       return [];
+    }
+  }
+
+  @override
+  Future<Movie> getMovieById(String id) async {
+    try {
+      final response = await dio.get('/movie/$id');
+      if (response.statusCode != 200) {
+        throw Exception('Failed to load movie with ID: $id');
+      }
+      final movieDb = MovieDetailsMovieDb.fromJson(response.data);
+      final movie = MovieMapper.movieDetailsToEntity(movieDb);
+      return movie;
+    } catch (e) {
+      // Handle error
+      debugPrint('Error fetching movie by ID: $e');
+      throw Exception('Error fetching movie by ID: $e');
     }
   }
 }
