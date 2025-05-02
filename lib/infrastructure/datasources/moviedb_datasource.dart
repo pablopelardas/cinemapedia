@@ -102,4 +102,19 @@ class MoviedbDatasource implements MoviesDatasource {
       throw Exception('Error fetching movie by ID: $e');
     }
   }
+
+  @override
+  Future<List<Movie>> searchMovies(String query, {int page = 1}) async {
+    try {
+      final response = await dio.get(
+        '/search/movie',
+        queryParameters: {'query': query},
+      );
+      return _jsonToMovies(response.data);
+    } catch (e) {
+      // Handle error
+      debugPrint('Error fetching upcoming movies: $e');
+      return [];
+    }
+  }
 }
