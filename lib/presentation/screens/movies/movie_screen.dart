@@ -1,8 +1,7 @@
-import 'package:animate_do/animate_do.dart';
-import 'package:cinemapedia/domain/entities/actor.dart';
-import 'package:cinemapedia/domain/entities/movie.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:animate_do/animate_do.dart';
+import 'package:cinemapedia/domain/entities/movie.dart';
 import 'package:cinemapedia/presentation/providers/providers.dart';
 
 class MovieScreen extends ConsumerStatefulWidget {
@@ -185,18 +184,43 @@ class _ActorsByMovie extends ConsumerWidget {
   }
 }
 
-class _CustomSliverAppBar extends StatelessWidget {
+final isFavoriteProvider = FutureProvider.family<bool, int>((ref, movieId) {
+  final localStorageRepository = ref.watch(localStorageRepositoryProvider);
+  return localStorageRepository.isMovieFavorite(movieId);
+});
+
+class _CustomSliverAppBar extends ConsumerWidget {
   const _CustomSliverAppBar({required this.movie});
 
   final Movie movie;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final isFavoriteFuture = ref.watch(isFavoriteProvider(movie.id));
     final size = MediaQuery.of(context).size;
     return SliverAppBar(
       backgroundColor: Colors.black,
       expandedHeight: size.height * 0.7,
       foregroundColor: Colors.white,
+      actions: [
+        IconButton(
+          icon: isFavoriteFuture.when(
+            data:
+                (isFavorite) => Icon(
+                  isFavorite ? Icons.favorite : Icons.favorite_border,
+                  color: isFavorite ? Colors.red : Colors.white,
+                ),
+            error: (error, stackTrace) => const Icon(Icons.error),
+            loading: () => const CircularProgressIndicator(),
+          ),
+          onPressed: () async {
+            await ref
+                .watch(localStorageRepositoryProvider)
+                .toggleFavorite(movie);
+            ref.invalidate(isFavoriteProvider(movie.id));
+          },
+        ),
+      ],
       flexibleSpace: FlexibleSpaceBar(
         titlePadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
         title: Text(
@@ -218,30 +242,59 @@ class _CustomSliverAppBar extends StatelessWidget {
                 },
               ),
             ),
-            const SizedBox.expand(
-              child: DecoratedBox(
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    colors: [Colors.transparent, Colors.black87],
-                    begin: Alignment.topCenter,
-                    end: Alignment.bottomCenter,
-                    stops: [0.7, 1],
-                  ),
-                ),
-              ),
+            _CustomGradient(
+              colors: [Colors.transparent, Colors.black87],
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter,
+              stops: [0.7, 1],
             ),
-            const SizedBox.expand(
-              child: DecoratedBox(
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    colors: [Colors.black54, Colors.transparent],
-                    begin: Alignment.topLeft,
-                    stops: [0.0, 0.3],
-                  ),
-                ),
-              ),
+
+            _CustomGradient(
+              colors: [Colors.black54, Colors.transparent],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              stops: [0.0, 0.2],
+            ),
+
+            _CustomGradient(
+              begin: Alignment.topRight,
+              end: Alignment.bottomLeft,
+              colors: [Colors.black54, Colors.transparent],
+              stops: [0.0, 0.2],
             ),
           ],
+        ),
+      ),
+    );
+  }
+}
+
+class _CustomGradient extends StatelessWidget {
+  final AlignmentGeometry begin;
+  final AlignmentGeometry end;
+  final List<Color> colors;
+  final List<double> stops;
+  const _CustomGradient({
+    this.begin = Alignment.topLeft,
+    this.end = Alignment.bottomRight,
+    this.colors = const [Colors.black54, Colors.transparent],
+    this.stops = const [0.0, 0.3],
+  }) : assert(
+         colors.length == stops.length,
+         'Colors and stops must have the same length.',
+       );
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox.expand(
+      child: DecoratedBox(
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            colors: colors,
+            begin: begin,
+            end: end,
+            stops: stops,
+          ),
         ),
       ),
     );
